@@ -6,9 +6,12 @@ export default {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['var(--font-inter)'],
-        mono: ['var(--font-mono)'],
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: '100%',
+          },
+        },
       },
     },
   },
