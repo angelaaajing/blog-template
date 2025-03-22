@@ -7,12 +7,15 @@ import { posts } from '../../data/posts';
 import { authors } from '../../data/authors';
 import { tags } from '../../data/tags';
 
+type SortOption = 'newest' | 'oldest';
+
 const BlogList = () => {
   const location = useLocation();
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAuthors, setSelectedAuthors] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState<SortOption>('newest');
   
   // Handle location state (for filtering from BlogDetail page)
   useEffect(() => {
@@ -29,12 +32,8 @@ const BlogList = () => {
   }, [location]);
   
   useEffect(() => {
-    // Sort posts by date (newest first)
-    const sortedPosts = [...posts].sort(
-      (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
-    );
-    
-    let result = sortedPosts;
+    // First filter posts
+    let result = [...posts];
     
     // Apply search filter
     if (searchQuery) {
@@ -62,8 +61,20 @@ const BlogList = () => {
       );
     }
     
+    // Then sort the filtered posts
+    result = sortPosts(result, sortOption);
+    
     setFilteredPosts(result);
-  }, [searchQuery, selectedAuthors, selectedTags]);
+  }, [searchQuery, selectedAuthors, selectedTags, sortOption]);
+
+  const sortPosts = (postsToSort: Post[], option: SortOption): Post[] => {
+    return [...postsToSort].sort((a, b) => {
+      const dateA = new Date(a.published_at).getTime();
+      const dateB = new Date(b.published_at).getTime();
+      
+      return option === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+  };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -81,6 +92,10 @@ const BlogList = () => {
   const handleTagClick = (tagId: string) => {
     setSelectedTags([tagId]);
   };
+  
+  const handleSortChange = (option: SortOption) => {
+    setSortOption(option);
+  };
 
   return (
     <div className="max-w-5xl mx-auto px-4">
@@ -96,6 +111,27 @@ const BlogList = () => {
           selectedTags={selectedTags}
         />
       </div>
+      
+      {filteredPosts.length > 0 && (
+        <div className="mb-6 flex justify-between items-center">
+          <div className="text-gray-600">
+            {filteredPosts.length} {filteredPosts.length === 1 ? 'post' : 'posts'} found
+          </div>
+          
+          <div className="flex items-center">
+            <label htmlFor="sortOrder" className="text-gray-600 mr-2 font-medium">Sort by:</label>
+            <select
+              id="sortOrder"
+              value={sortOption}
+              onChange={(e) => handleSortChange(e.target.value as SortOption)}
+              className="bg-white border border-gray-300 text-gray-700 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[100px]"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+        </div>
+      )}
       
       {filteredPosts.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-lg shadow-md">

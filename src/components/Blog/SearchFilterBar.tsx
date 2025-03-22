@@ -59,27 +59,40 @@ const SearchFilterBar = ({
   };
   
   const getSelectedTagsText = () => {
-    if (selectedTags.length === 0) return 'All Tags';
+    if (selectedTags.length === 0) return 'All Topics';
     if (selectedTags.length === 1) {
-      return tags.find(t => t.id === selectedTags[0])?.name || 'Tag';
+      return tags.find(t => t.id === selectedTags[0])?.name || 'Topic';
     }
-    return `${selectedTags.length} Tags`;
+    return `${selectedTags.length} Topics`;
   };
+  
+  // Group tags by category
+  const groupedTags = tags.reduce((acc, tag) => {
+    const category = tag.id.includes('-') ? 
+      tag.id.split('-')[0].charAt(0).toUpperCase() + tag.id.split('-')[0].slice(1) : 
+      'Other';
+    
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(tag);
+    return acc;
+  }, {} as Record<string, Tag[]>);
   
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-      <form onSubmit={handleSearch} className="mb-4">
-        <div className="flex items-center border rounded-lg overflow-hidden shadow-sm">
+      <form onSubmit={handleSearch} className="mb-5">
+        <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all">
           <input
             type="text"
-            placeholder="Search posts, authors, tags..."
+            placeholder="Search posts, authors, topics..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full px-4 py-2 focus:outline-none"
+            className="w-full px-4 py-3 focus:outline-none text-gray-700"
           />
           <button
             type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 font-medium transition-colors"
           >
             Search
           </button>
@@ -90,27 +103,31 @@ const SearchFilterBar = ({
         <div className="relative" ref={authorDropdownRef}>
           <button
             onClick={() => setShowAuthorDropdown(!showAuthorDropdown)}
-            className="flex items-center justify-between bg-gray-100 hover:bg-gray-200 rounded-md px-4 py-2 min-w-[160px]"
+            className="flex items-center justify-between bg-gray-100 hover:bg-gray-200 rounded-md px-4 py-2 min-w-[180px] text-gray-700 transition-colors"
           >
-            <span>{getSelectedAuthorsText()}</span>
-            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <span className="font-medium">{getSelectedAuthorsText()}</span>
+            <svg className="w-4 h-4 ml-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
           
           {showAuthorDropdown && (
-            <div className="absolute z-10 mt-2 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
-              <div className="p-2">
+            <div className="absolute z-10 mt-2 w-64 bg-white border rounded-md shadow-lg max-h-80 overflow-y-auto">
+              <div className="p-3">
+                <h3 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wider">Authors</h3>
                 {authors.map(author => (
-                  <div key={author.id} className="mb-1 last:mb-0">
-                    <label className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-100 rounded">
+                  <div key={author.id} className="mb-2 last:mb-0">
+                    <label className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 rounded transition-colors">
                       <input
                         type="checkbox"
                         checked={selectedAuthors.includes(author.id)}
                         onChange={() => handleAuthorSelect(author.id)}
-                        className="rounded"
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-colors"
                       />
-                      <span>{author.name}</span>
+                      <div className="flex items-center">
+                        <img src={author.avatar} alt={author.name} className="w-8 h-8 rounded-full mr-2" />
+                        <span className="text-gray-700">{author.name}</span>
+                      </div>
                     </label>
                   </div>
                 ))}
@@ -122,28 +139,35 @@ const SearchFilterBar = ({
         <div className="relative" ref={tagDropdownRef}>
           <button
             onClick={() => setShowTagDropdown(!showTagDropdown)}
-            className="flex items-center justify-between bg-gray-100 hover:bg-gray-200 rounded-md px-4 py-2 min-w-[160px]"
+            className="flex items-center justify-between bg-gray-100 hover:bg-gray-200 rounded-md px-4 py-2 min-w-[180px] text-gray-700 transition-colors"
           >
-            <span>{getSelectedTagsText()}</span>
-            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <span className="font-medium">{getSelectedTagsText()}</span>
+            <svg className="w-4 h-4 ml-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
           
           {showTagDropdown && (
-            <div className="absolute z-10 mt-2 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
-              <div className="p-2">
-                {tags.map(tag => (
-                  <div key={tag.id} className="mb-1 last:mb-0">
-                    <label className="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-100 rounded">
-                      <input
-                        type="checkbox"
-                        checked={selectedTags.includes(tag.id)}
-                        onChange={() => handleTagSelect(tag.id)}
-                        className="rounded"
-                      />
-                      <span>{tag.name}</span>
-                    </label>
+            <div className="absolute z-10 mt-2 w-72 bg-white border rounded-md shadow-lg max-h-96 overflow-y-auto">
+              <div className="p-3">
+                <h3 className="text-sm font-semibold text-gray-500 mb-2 uppercase tracking-wider">Topics</h3>
+                
+                {Object.entries(groupedTags).map(([category, categoryTags]) => (
+                  <div key={category} className="mb-3 last:mb-0">
+                    <h4 className="text-xs font-medium text-gray-500 mb-2 ml-2">{category}</h4>
+                    <div className="space-y-1">
+                      {categoryTags.map(tag => (
+                        <label key={tag.id} className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-gray-50 rounded transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={selectedTags.includes(tag.id)}
+                            onChange={() => handleTagSelect(tag.id)}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-colors"
+                          />
+                          <span className="text-gray-700">{tag.name}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -154,7 +178,7 @@ const SearchFilterBar = ({
         {(selectedAuthors.length > 0 || selectedTags.length > 0) && (
           <button
             onClick={() => onFilterChange({ authors: [], tags: [] })}
-            className="text-sm text-red-600 hover:text-red-800 self-center"
+            className="text-sm text-red-600 hover:text-red-800 self-center font-medium transition-colors flex items-center"
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

@@ -13,7 +13,9 @@ const BlogCard = ({ post, onAuthorClick, onTagClick }: BlogCardProps) => {
   const author = authors.find(author => author.id === post.author_id);
   const postTags = allTags.filter(tag => post.tags.includes(tag.id));
   
-  const formattedDate = new Date(post.published_at).toLocaleDateString('en-US', {
+  const date = new Date(post.published_at);
+  
+  const formattedDate = date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -42,6 +44,11 @@ const BlogCard = ({ post, onAuthorClick, onTagClick }: BlogCardProps) => {
               </button>
             ))}
           </div>
+          <div className="absolute bottom-4 right-4">
+            <div className="bg-white bg-opacity-90 text-gray-700 text-xs font-medium px-3 py-1 rounded-md">
+              {formattedDate}
+            </div>
+          </div>
         </div>
         
         <div className="p-6">
@@ -63,7 +70,6 @@ const BlogCard = ({ post, onAuthorClick, onTagClick }: BlogCardProps) => {
               >
                 {author?.name}
               </button>
-              <p className="text-sm text-gray-500">{formattedDate}</p>
             </div>
           </div>
           
